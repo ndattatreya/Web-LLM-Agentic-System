@@ -1,0 +1,35 @@
+{
+  "segments_used": 5,
+  "summary": "ReactJS is a component-based JavaScript library used to the creation of single-page applications (SPAs) with a focus on performance and maintainability.",
+  "structured_data": {
+    "title": "ReactJS is a component-based JavaScript library used to the creation of single-page applications (SP...",
+    "key_points": [
+      "ReactJS is a component-based JavaScript library used to the creation of single-page applications (SPAs) with a focus on performance and maintainability."
+    ],
+    "entities": [
+      "ReactJS",
+      "JavaScript",
+      "SPAs"
+    ],
+    "relationships": [
+      {
+        "source": "ReactJS",
+        "target": "JavaScript",
+        "relation": "related_to",
+        "sentence": "ReactJS is a component-based JavaScript library used to the creation of single-page applications (SPAs) with a focus on performance and maintainability."
+      },
+      {
+        "source": "ReactJS",
+        "target": "SPAs",
+        "relation": "related_to",
+        "sentence": "ReactJS is a component-based JavaScript library used to the creation of single-page applications (SPAs) with a focus on performance and maintainability."
+      },
+      {
+        "source": "JavaScript",
+        "target": "SPAs",
+        "relation": "related_to",
+        "sentence": "ReactJS is a component-based JavaScript library used to the creation of single-page applications (SPAs) with a focus on performance and maintainability."
+      }
+    ]
+  }
+}

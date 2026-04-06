@@ -1,0 +1,142 @@
+[
+  {
+    "segment_id": "seg_0",
+    "text": "React Course React Tutorial React Exercise React Basic Concepts React Components React Props React Hooks React Router React Advanced React Examples React Interview Questions React Projects React Components ReactJS Functional Components React Class Components ReactJS Pure Components ReactJS Container and Presentational Pattern in Components ReactJS PropTypes React Lifecycle Create ToDo",
+    "relevance_score": 0.6063,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_1",
+    "text": "App using ReactJS Create a Quiz App using ReactJS Create a Coin Flipping App using ReactJS How to create a Color-Box App using ReactJS? Dice Rolling App using ReactJS Guess the number with React ReactJS is a component-based JavaScript library used to build dynamic and interactive user interfaces. It simplifies",
+    "relevance_score": 0.676,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_2",
+    "text": "the creation of single-page applications (SPAs) with a focus on performance and maintainability. It is widely used by companies like Facebook, Instagram, Netflix, and Airbnb because of its flexibility and performance. Reusable Components: Speeds up development by allowing code reusability. Declarative UI: Makes it easier to describe how the UI",
+    "relevance_score": 0.627,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_3",
+    "text": "should look based on the current state. Cross-Platform Support: Powers both web apps (React.js) and mobile apps (React Native). Basic React Interview Questions 1. How does React.js work? React.js works on a component-based architecture and uses a virtual DOM to efficiently update and render user interfaces. Components : UI is",
+    "relevance_score": 0.6843,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_4",
+    "text": "broken into reusable, independent pieces. JSX : Allows writing HTML-like code inside JavaScript for easier UI development.. Virtual DOM : A lightweight copy of the real DOM that tracks changes. Reconciliation : Compares old and new Virtual DOM and updates only the changed parts in the real DOM. One-way Data",
+    "relevance_score": 0.6282,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_5",
+    "text": "Flow : Ensures predictable UI updates by passing data from parent to child via props. State Management : React automatically re-renders components when their state changes. 2. What is JSX and how is it converted into JavaScript? JSX: Syntax extension for JavaScript, mainly used with React. HTML in JS: Allows",
+    "relevance_score": 0.6687,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_6",
+    "text": "writing HTML-like code inside JavaScript for easier readability and maintenance. Expressions: Embed JavaScript expressions in JSX using {} . Example of JSX: The name written in curly braces { } signifies JSX const name = \"Learner\" ; const element = ( h1 > Hello , { name }. Welcome to",
+    "relevance_score": 0.6392,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_7",
+    "text": "GeeksforGeeks . h1 > ); const element = React.createElement(\"h1\", null, \"Hello, World!\"); 3. What is a React component? A Component is one of the core building blocks of React. In other words, we can say that every application you will develop in React will be made up of pieces called",
+    "relevance_score": 0.693,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_8",
+    "text": "components. Components make the task of building UIs much easier. Functional Components: Functional components are simply JavaScript functions. Initially, they were limited in terms of features like state and lifecycle methods. However, with the introduction of Hooks, functional components can now use state, manage side effects, and access other features",
+    "relevance_score": 0.6551,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_9",
+    "text": "that were once exclusive to class components. Class Components: Class components are more complex than functional components. They are able to manage state, handle lifecycle methods, and can also interact with other components. Class components can pass data between each other via props, similar to functional components. 4. Difference between",
+    "relevance_score": 0.7141,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_10",
+    "text": "functional and class component in React? Functional Components Class Components A functional component is just a plain JavaScript pure function that accepts props as an argument A class component requires you to extend from React. Component and create a render function No render method used It must have the render()",
+    "relevance_score": 0.7281,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_11",
+    "text": "method returning JSX Also known as Stateless components Also known as Stateful components React lifecycle methods (for example, componentDidMount) cannot be used in functional components. React lifecycle methods can be used inside class components (for example, componentDidMount). Constructors are not used. Constructor is used as it needs to store state.",
+    "relevance_score": 0.7398,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_12",
+    "text": "Uses hooks like useState for managing state. 5. What are props and default props in React? React allows us to pass information to a Component using something called props (which stands for properties). Props are objects which can be used inside a component. We can access any props inside from",
+    "relevance_score": 0.708,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_13",
+    "text": "the component’s class to which the props is passed. The props can be accessed as shown below: this.props.propName; Default props are fallback values assigned to a component’s props when the parent does not provide them. They help prevent undefined errors and make components more robust. Default props can be defined",
+    "relevance_score": 0.7001,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_14",
+    "text": "using: Class components: ComponentName.defaultProps = { propName: defaultValue } Functional components: assigning default values in function parameters. 6. What is state in React and how do you update it? State is the internal, mutable data of a React component that controls its behavior and rendering. When state changes, React re-renders",
+    "relevance_score": 0.7048,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_15",
+    "text": "the component to update the UI. State is updated using setState() in class components or the useState setter function in functional components. Updates are asynchronous and can be triggered by events, user interactions, or API responses. When new state depends on the previous state, the functional form ( setState(prev =>",
+    "relevance_score": 0.7298,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_16",
+    "text": "...) ) should be used. The Data is passed from one component to another. The Data is passed within the component only. It is Immutable (cannot be modified). It is Mutable ( can be modified). Props can be used with state and functional components. The state can be used only",
+    "relevance_score": 0.7609,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_17",
+    "text": "with the state components/class component (Before 16.0). Props are read-only. The state is both read and write. Example: Passing a title or onClick handler to a button component. 8. What are fragments in React? In React, fragments allow you to group multiple elements without adding extra nodes to the DOM.",
+    "relevance_score": 0.7101,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_18",
+    "text": "Normally, returning multiple elements requires a wrapper like a , which can create unnecessary DOM elements. Fragments solve this by letting you return multiple elements without extra wrappers. Fragments avoid extra DOM nodes. Short syntax: <> (cannot use attributes). Full syntax: (can use key ). Useful in lists, tables, and",
+    "relevance_score": 0.6932,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  },
+  {
+    "segment_id": "seg_19",
+    "text": "grouping multiple elements. Helps keep the DOM clean and lightweight. 9. What is the difference between controlled and uncontrolled components? Controlled Components 10. How does the DOM manage the input value in uncontrolled components? React does not manage the form input’s state. Instead, the DOM itself keeps track of the",
+    "relevance_score": 0.7223,
+    "source_id": "https://www.geeksforgeeks.org/reactjs/react-interview-questions/",
+    "source_type": "html"
+  }
+]

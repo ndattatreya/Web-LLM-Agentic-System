@@ -1,0 +1,222 @@
+[
+  {
+    "segment_id": "seg_0",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.2297
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.4002
+    }
+  },
+  {
+    "segment_id": "seg_1",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.1677
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.3298
+    }
+  },
+  {
+    "segment_id": "seg_2",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.1686
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.3404
+    }
+  },
+  {
+    "segment_id": "seg_3",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.1778
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.3356
+    }
+  },
+  {
+    "segment_id": "seg_4",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.1858
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.4555
+    }
+  },
+  {
+    "segment_id": "seg_5",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.2205
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.3214
+    }
+  },
+  {
+    "segment_id": "seg_6",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.1796
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.3917
+    }
+  },
+  {
+    "segment_id": "seg_7",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.204
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.3122
+    }
+  },
+  {
+    "segment_id": "seg_8",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.1602
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.2998
+    }
+  },
+  {
+    "segment_id": "seg_9",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.1449
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.2662
+    }
+  },
+  {
+    "segment_id": "seg_10",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.1346
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.3521
+    }
+  },
+  {
+    "segment_id": "seg_11",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.1612
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.3279
+    }
+  },
+  {
+    "segment_id": "seg_12",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.1324
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.2611
+    }
+  },
+  {
+    "segment_id": "seg_13",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.1388
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.2747
+    }
+  },
+  {
+    "segment_id": "seg_14",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.1395
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.2786
+    }
+  },
+  {
+    "segment_id": "seg_15",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.1376
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.2669
+    }
+  },
+  {
+    "segment_id": "seg_16",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.1385
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.2528
+    }
+  },
+  {
+    "segment_id": "seg_17",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.1425
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.2823
+    }
+  },
+  {
+    "segment_id": "seg_18",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.1373
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.2719
+    }
+  },
+  {
+    "segment_id": "seg_19",
+    "model_a": {
+      "name": "distilbert-base-uncased",
+      "inference_time_sec": 0.1353
+    },
+    "model_b": {
+      "name": "bert-base-uncased",
+      "inference_time_sec": 0.2629
+    }
+  }
+]

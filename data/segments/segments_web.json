@@ -1,0 +1,78 @@
+[
+  {
+    "segment_id": "seg_0",
+    "text": "Python Introduction Input and Output in Python Python Variables Python Operators Python Keywords Python Data Types Conditional Statements in Python Loops in Python Python Functions Python OOP Concepts Python Exception Handling File Handling in Python Python Database Tutorial Python MongoDB Tutorial Python MySQL Python Packages Python Modules Python DSA Libraries"
+  },
+  {
+    "segment_id": "seg_1",
+    "text": "List of Python GUI Library and Packages NumPy Tutorial Pandas Tutorial Matplotlib Tutorial Python Seaborn Tutorial StatsModel Library - Tutorial Learning Model Building in Scikit-learn TensorFlow Tutorial PyTorch Tutorial Flask Tutorial Django Tutorial | Learn Django Framework Django ORM - Inserting, Updating & Deleting Data Templating With Jinja2 in Flask"
+  },
+  {
+    "segment_id": "seg_2",
+    "text": "Django Templates Build a REST API using Flask - Python Building a Simple API with Django REST Framework Python is one of the most popular programming languages. It’s simple to use, packed with features and supported by a wide range of libraries and frameworks. Its clean syntax makes it beginner-friendly."
+  },
+  {
+    "segment_id": "seg_3",
+    "text": "A high-level language, used in data science, automation, AI, web development and more. Known for its readability, which means code is easier to write, understand and maintain. Backed by strong library support, we don’t have to build everything from scratch. Basic Code Example The following is a simple program that"
+  },
+  {
+    "segment_id": "seg_4",
+    "text": "displays the message “Hello, World!” on the screen. Why Learn Python? Requires fewer lines of code compared to other programming languages like Java. Provides Libraries / Frameworks like Django, Flask and many more for Web Development, and Pandas, Tensorflow, Scikit-learn and many more for, AI/ML, Data Science and Data Analysis"
+  },
+  {
+    "segment_id": "seg_5",
+    "text": "Cross-platform, works on Windows, Mac and Linux without major changes. Used by top tech companies like Google, Netflix and NASA. Many Python coding job opportunities in Software Development, Data Science and AI/ML. Basics In this section, we’ll cover the basics of Python programming, including installing Python, writing first program, understanding"
+  },
+  {
+    "segment_id": "seg_6",
+    "text": "comments and working with variables, keywords and operators. Before starting to learn python we need to install python on our system. Introduction Applications Input and Output Variables Operators Quiz: Basics , I/O Keywords Data Types Quiz: Data Types , Numbers , Boolean Conditional Statements Loops Quiz: Control Flow , Loops"
+  },
+  {
+    "segment_id": "seg_7",
+    "text": "Functions In this section of Python 3 tutorial we'll explore Python function syntax, parameter handling, return values and variable scope. Along the way, we'll also introduce versatile functions like range(), map, filter and lambda functions. Functions Pass Statement in Function Global and Local Variables Recursion *args and **kwargs in Function"
+  },
+  {
+    "segment_id": "seg_8",
+    "text": "‘Self’ as Default Argument First Class Function Lambda Function Map , Reduce and Filter Function Inner Function Decorators Quiz: Functions Data Structures Python offers versatile collections of data types, including lists, string, tuples, sets, dictionaries and arrays. In this section, we will learn about each data types in detail. Strings"
+  },
+  {
+    "segment_id": "seg_9",
+    "text": "List Quiz: List , String Tuples Dictionary Quiz: Tuples , Dictionary Sets Arrays List Comprehension Quiz: Sets , Arrays , List Comprehension Python's collections module offers essential data structures, including the following: Counters Heapq Deque OrderedDict Defaultdict Quiz: Counters , Heapq , Deque , OrderedDict Refer DSA with Python for"
+  },
+  {
+    "segment_id": "seg_10",
+    "text": "Complete Tutorial. OOP Concepts In this section, we'll explore the core principles of object-oriented programming (OOP) in Python. From encapsulation to inheritance, polymorphism, abstract classes and iterators, we'll cover the essential concepts that helps you to build modular, reusable and scalable code. Python OOP Classes and Objects Polymorphism Inheritance Abstraction"
+  },
+  {
+    "segment_id": "seg_11",
+    "text": "Encapsulation Iterators Quiz: OOP Exception Handling In this section, we'll explore Python Exception Handling that how Python deals with unexpected errors, enabling us to write fault-tolerant code. We'll cover file handling, including reading from and writing to files. Exception Handling Built-in Exception User defined Exception Quiz: Exception Handling File Handling"
+  },
+  {
+    "segment_id": "seg_12",
+    "text": "In this section, we will cover file handling, including reading from and writing to files. File Handling Read Files Write/Create Files OS Module pathlib Module Directory Management Quiz: File Handling Database Handling In this section we will learn how to access and work with MySQL and MongoDB databases Python MongoDB"
+  },
+  {
+    "segment_id": "seg_13",
+    "text": "Tutorial Python MySQL Tutorial Packages or Libraries Python is a huge collection of Python Packages standard libraries that make development easier. These libraries help with a wide range of tasks and can save you a lot of time by providing ready-to-use tools. Packages Built-in Modules DSA Libraries GUI Libraries Data"
+  },
+  {
+    "segment_id": "seg_14",
+    "text": "Science 1. Foundational Libraries : These are the libraries that form the base for all data science work. Start here to build a strong foundation. NumPy Pandas Matplotlib 2. Advanced Visualization and Statistical Tools: Once you’re comfortable with basic data handling and visualization, move to creating cleaner visuals and performing"
+  },
+  {
+    "segment_id": "seg_15",
+    "text": "statistical analysis. Seaborn Statsmodel 3. Machine Learning Libraries: After data manipulation and visualization, learn machine learning, starting with simpler models and moving to advanced ones. Scikit-learn XGBoost / LightGBM 4. Deep Learning Frameworks: If you’re interested in AI and deep learning, these libraries will allow you to build and train"
+  },
+  {
+    "segment_id": "seg_16",
+    "text": "neural networks. TensorFlow and Keras PyTorch Complete Tutorial on Python for Data Science Web Development 1. Core Web Frameworks (Backend Development with Python): These are the tools for building Python-based web applications. SQLite SQLAlchemy Django ORM 3. Front-End and Backend Integration: Learn how to connect Python backends with front-end technologies"
+  },
+  {
+    "segment_id": "seg_17",
+    "text": "to create dynamic, full-stack web applications. Jinja2 (Flask) Django Templates 4. API Development: Learn to build APIs (Application Programming Interfaces) for connecting your backend with front-end apps or other services. Flask-RESTful Django REST Framework (DRF) Complete Tutorial on Python for Web Development Practice Python quiz page covers topics including variables,"
+  },
+  {
+    "segment_id": "seg_18",
+    "text": "data types, input, output, lists, tuples, dictionaries and sets. The Python Coding Practice Problems page offers exercises on loops, functions, lists, strings, dictionaries, sets and advanced structures like heaps and deques."
+  }
+]
