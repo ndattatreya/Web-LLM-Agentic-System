@@ -1,31 +1,17 @@
-version: '3.8'
-
 services:
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: web-llm-backend
     ports:
       - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
-      - API_HOST=0.0.0.0
-      - API_PORT=8000
     volumes:
-      - ./data:/app/data
-      - ./agent:/app/agent
-      - ./classifier:/app/classifier
-      - ./crawler:/app/crawler
-      - ./relevance_model:/app/relevance_model
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    networks:
-      - web-llm-network
+      - .:/app
+    working_dir: /app
+    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
     build:

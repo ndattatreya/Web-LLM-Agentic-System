@@ -142,7 +142,13 @@ export default function ProcessingForm({
         className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-8"
       >
         {processingMode === 'url' ? (
-          <form onSubmit={handleProcessURL} className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleProcessURL();
+            }}
+            className="space-y-4"
+          >
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Enter URL

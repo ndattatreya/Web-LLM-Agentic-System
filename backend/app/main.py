@@ -4,25 +4,29 @@ Provides REST API endpoints for document processing, relevance filtering, and mo
 """
 
 import os
+
+os.environ["PATH"] += os.pathsep + r"C:\Users\NAMMINA JAHNAVI\Downloads\ffmpeg-8.1-essentials_build\ffmpeg-8.1-essentials_build\bin"
 import sys
 import json
+import re
 import asyncio
 from pathlib import Path
 from typing import Optional, List
+from urllib.parse import urlparse
 from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 import tempfile
+import whisper
 
 # Add parent directory to path to import project modules
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from classifier.relevance_filter import is_relevant
 from crawler.document_loader import load_document
 from agent.content_extractor import extract_main_content
 from agent.pdf_cleaner import clean_pdf_text
-from classifier.relevance_model_inference import is_relevant_ml
 from agent.model_comparator import compare_models
-from agent.confidence_scorer import score_relevance
 
 # ==========================================
 # CONFIG
@@ -41,6 +45,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+whisper_model = None
 
 # ==========================================
 # MODELS
@@ -69,6 +75,8 @@ class ProcessingResult(BaseModel):
     processing_time: float
 
 class ModelComparison(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+    
     model_a: str
     model_b: str
     total_comparisons: int
@@ -86,10 +94,12 @@ class DatasetStatistics(BaseModel):
 # ==========================================
 # STORAGE
 # ==========================================
-RESULTS_DIR = Path(__file__).parent.parent.parent / "data" / "api_results"
-RESULTS_DIR.mkdir(exist_ok=True)
+RESULTS_DIR = Path(__file__).parent.parent / "data" / "api_results"
+RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 processing_results = {}
+RELEVANCE_THRESHOLD = 0.6
+MAX_RELEVANT_SEGMENTS = 500
 
 # ==========================================
 # UTILITY FUNCTIONS
@@ -101,6 +111,41 @@ def split_text(text: str, max_words: int = 50) -> List[str]:
         " ".join(words[i:i + max_words])
         for i in range(0, len(words), max_words)
     ]
+
+
+def normalize_text(text: str) -> str:
+    text = text.lower()
+    text = re.sub(r"[^a-z0-9\s]+", " ", text)
+    return " ".join(text.split())
+
+
+def extract_keywords(text: str) -> List[str]:
+    normalized = normalize_text(text)
+    return [word for word in normalized.split() if len(word) > 3]
+
+
+def keyword_similarity(text: str, query: str) -> float:
+    if not query:
+        return 0.0
+
+    query_keywords = set(extract_keywords(query))
+    text_keywords = set(extract_keywords(text))
+
+    if not query_keywords or not text_keywords:
+        return 0.0
+
+    overlap = len(query_keywords & text_keywords)
+    return overlap / len(query_keywords)
+
+
+def get_source_query(source: str) -> str:
+    if source.startswith("http"):
+        parsed = urlparse(source)
+        path = parsed.path or parsed.netloc
+        return Path(path).stem.replace("-", " ").replace("_", " ")
+
+    return Path(source).stem.replace("-", " ").replace("_", " ")
+
 
 def save_result(result_id: str, data: dict):
     """Save processing result to file"""
@@ -133,163 +178,143 @@ async def health():
     """Health check endpoint"""
     return {"status": "healthy"}
 
-@app.post("/process/url", response_model=ProcessingResult, tags=["Processing"])
-async def process_url(url: str):
-    """
-    Process a URL and extract relevant segments
-    
-    Args:
-        url: The URL to process
-    
-    Returns:
-        ProcessingResult with segments and analysis
-    """
-    import time
-    start_time = time.time()
-    
-    try:
-        # Load document from URL
-        print(f"Loading URL: {url}")
-        doc = load_document(url)
-        
-        raw_text = doc.get("text", "")
-        if isinstance(raw_text, dict):
-            raw_text = raw_text.get("html", "")
-        
-        if not raw_text:
-            raise HTTPException(status_code=400, detail="Could not extract text from URL")
-        
-        # Extract main content
-        print("Extracting main content...")
-        extracted = extract_main_content(raw_text)
-        text = extracted if isinstance(extracted, str) else raw_text
-        
-        # Split into segments
-        segments = split_text(text)
-        
-        # Filter relevant segments
-        print(f"Filtering {len(segments)} segments...")
-        relevant_segments = []
-        for idx, seg in enumerate(segments):
-            try:
-                is_relevant = is_relevant_ml(seg)
-                score = score_relevance(seg)
-                if is_relevant:
-                    relevant_segments.append({
-                        "id": f"seg_{idx}",
-                        "text": seg,
-                        "is_relevant": True,
-                        "relevance_score": score.get("score", 0.0),
-                        "confidence": score.get("confidence", 0.0)
-                    })
-            except Exception as e:
-                print(f"Error processing segment {idx}: {e}")
-                continue
-        
-        processing_time = time.time() - start_time
-        
-        result = {
-            "source": url,
-            "source_type": "url",
-            "raw_text": text[:1000] + ("..." if len(text) > 1000 else ""),
-            "total_segments": len(segments),
-            "relevant_segments": relevant_segments,
-            "entities": [],
-            "key_points": [],
-            "processing_time": processing_time
-        }
-        
-        return result
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
-
 @app.post("/process/file", response_model=ProcessingResult, tags=["Processing"])
 async def process_file(file: UploadFile = File(...)):
-    """
-    Process an uploaded file (PDF, audio, etc.)
-    
-    Args:
-        file: The file to process
-    
-    Returns:
-        ProcessingResult with segments and analysis
-    """
     import time
+    import numpy as np
+
     start_time = time.time()
-    
+
     try:
-        # Save uploaded file temporarily
+        print(f"Processing file: {file.filename}")
+
+        # 1️⃣ Save temp file
         with tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename).suffix) as tmp:
             content = await file.read()
             tmp.write(content)
             tmp_path = tmp.name
-        
+
         try:
-            # Load document
-            print(f"Loading file: {file.filename}")
-            doc = load_document(tmp_path)
-            
-            raw_text = doc.get("text", "")
-            if isinstance(raw_text, dict):
-                raw_text = raw_text.get("html", "")
-            
-            if not raw_text:
-                raise HTTPException(status_code=400, detail="Could not extract text from file")
-            
-            # Extract main content (especially for PDF)
-            if tmp_path.endswith('.pdf'):
-                print("Cleaning PDF text...")
-                text = clean_pdf_text(raw_text)
+            # 2️⃣ LOAD TEXT BASED ON FILE TYPE
+            if tmp_path.endswith(".pdf"):
+                print("Cleaning PDF...")
+                doc = await asyncio.to_thread(load_document, tmp_path)
+                raw_text = doc.get("text", "")
+                text = await asyncio.to_thread(clean_pdf_text, raw_text)
+
+            elif tmp_path.endswith((".txt", ".md")):
+                with open(tmp_path, "r", encoding="utf-8") as f:
+                    text = f.read()
+
+            # 🎧 NEW: AUDIO SUPPORT
+            elif tmp_path.endswith((".mp3", ".wav", ".m4a", ".aac")):
+                print("Transcribing audio...")
+
+                import os
+                import whisper
+
+                # 🔥 FORCE FFmpeg PATH (CRITICAL FIX)
+                os.environ["PATH"] += os.pathsep + r"C:\Users\NAMMINA JAHNAVI\Downloads\ffmpeg-8.1-essentials_build\ffmpeg-8.1-essentials_build\bin"
+
+                # 🔥 Use smaller model for speed
+                model = whisper.load_model("base")
+
+                result = model.transcribe(tmp_path)
+
+                text = result.get("text", "")
+
+                if not text or len(text.strip()) < 10:
+                    raise HTTPException(status_code=400, detail="Audio transcription failed")
+
+                print("Audio transcription completed")
+
             else:
-                text = extract_main_content(raw_text) if isinstance(raw_text, str) else raw_text
-            
-            # Split into segments
+                raise HTTPException(
+                    status_code=400,
+                    detail="Unsupported file type (PDF, TXT, AUDIO supported)"
+                )
+            if not text or len(text.strip()) < 50:
+                raise HTTPException(status_code=400, detail="File has insufficient content")
+
+            # 3️⃣ SEGMENT
             segments = split_text(text)
-            
-            # Filter relevant segments
-            print(f"Filtering {len(segments)} segments...")
-            relevant_segments = []
+            source_query = get_source_query(file.filename)
+
+            print(f"Segments created: {len(segments)}")
+
+            scored_segments = []
+
+            # 4️⃣ SCORING (NO ML DEPENDENCY)
             for idx, seg in enumerate(segments):
                 try:
-                    is_relevant = is_relevant_ml(seg)
-                    score = score_relevance(seg)
-                    if is_relevant:
-                        relevant_segments.append({
-                            "id": f"seg_{idx}",
-                            "text": seg,
-                            "is_relevant": True,
-                            "relevance_score": score.get("score", 0.0),
-                            "confidence": score.get("confidence", 0.0)
-                        })
+                    query_score = keyword_similarity(seg, source_query)
+                    length_score = min(len(seg.split()) / 50, 1.0)
+                    has_numbers = any(char.isdigit() for char in seg)
+                    structure_score = 0.2 if has_numbers else 0.0
+
+                    combined_score = (
+                        0.4 * query_score +
+                        0.4 * length_score +
+                        0.2 * structure_score
+                    )
+
+                    scored_segments.append({
+                        "id": f"seg_{idx}",
+                        "text": seg,
+                        "is_relevant": False,
+                        "relevance_score": round(query_score, 4),
+                        "confidence": round(combined_score, 4)
+                    })
+
                 except Exception as e:
-                    print(f"Error processing segment {idx}: {e}")
+                    print(f"Error segment {idx}: {e}")
                     continue
-            
+
+            # 5️⃣ DYNAMIC THRESHOLD
+            scores = [seg["confidence"] for seg in scored_segments]
+
+            if not scores:
+                threshold = 0.4
+            else:
+                threshold = max(0.35, float(np.percentile(scores, 60)))
+
+            print(f"Dynamic threshold: {threshold}")
+
+            # 6️⃣ FILTER
+            relevant_segments = [
+                {**seg, "is_relevant": True}
+                for seg in scored_segments
+                if seg["confidence"] >= threshold
+            ]
+
+            relevant_segments = sorted(
+                relevant_segments,
+                key=lambda x: x["confidence"],
+                reverse=True
+            )
+
+            print(f"Relevant segments: {len(relevant_segments)}")
+
             processing_time = time.time() - start_time
-            
-            result = {
+
+            return {
                 "source": file.filename,
                 "source_type": "file",
-                "raw_text": text[:1000] + ("..." if len(text) > 1000 else ""),
+                "raw_text": text[:1000],
                 "total_segments": len(segments),
                 "relevant_segments": relevant_segments,
                 "entities": [],
                 "key_points": [],
                 "processing_time": processing_time
             }
-            
-            return result
-            
+
         finally:
-            # Clean up temp file
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
-        
-    except HTTPException:
-        raise
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
+        print("ERROR:", str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/data/dataset", response_model=DatasetStatistics, tags=["Data"])
 async def get_dataset_statistics():

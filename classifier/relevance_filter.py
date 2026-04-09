@@ -64,14 +64,6 @@ def has_numeric_signals(text: str) -> bool:
 # -------------------------------
 
 def is_relevant(text: str):
-    """
-    Hybrid relevance filter.
-    Works well for:
-    - PDFs
-    - Web articles
-    - News
-    - Audio transcripts
-    """
 
     if not text or not text.strip():
         return False, 0.0
@@ -80,44 +72,53 @@ def is_relevant(text: str):
     word_count = len(words)
 
     # 1️⃣ Length gate
-    if word_count < MIN_WORDS:
+    if word_count < 20:
         return False, 0.0
 
     clean = normalize(text)
     score = 0.0
 
-    # 2️⃣ Section header boost (PDF-friendly)
-    for sec in SECTION_KEYWORDS:
-        if sec in clean[:200]:
-            score += 0.35
-            break
+    # ✅ 2️⃣ Length quality (VERY IMPORTANT)
+    if 40 <= word_count <= 150:
+        score += 0.25
+    elif 20 <= word_count < 40:
+        score += 0.15
 
-    # 3️⃣ Technical keyword density
-    tech_hits = sum(1 for kw in TECH_KEYWORDS if kw in clean)
-    score += min(tech_hits * 0.05, 0.40)
+    # ✅ 3️⃣ Sentence structure
+    sentence_count = text.count(".")
+    if sentence_count >= 2:
+        score += 0.25
 
-    # 4️⃣ Academic signals
-    if has_academic_signals(text):
-        score += 0.20
+    # ✅ 4️⃣ Vocabulary richness
+    unique_ratio = len(set(words)) / word_count
+    if unique_ratio > 0.5:
+        score += 0.2
 
-    # 5️⃣ Numeric / factual importance (NEW)
+    # ✅ 5️⃣ Numeric / factual info
     if has_numeric_signals(text):
-        score += 0.30
+        score += 0.2
 
-    # 6️⃣ Penalize noisy / garbage segments
+    # ✅ 6️⃣ Mild keyword (GENERAL, not tech-only)
+    general_keywords = [
+        "is", "are", "was", "were",
+        "species", "system", "process",
+        "important", "used", "known"
+    ]
+    if any(k in clean for k in general_keywords):
+        score += 0.1
+
+    # 🚫 Noise penalty
     symbol_ratio = sum(
         1 for c in text if not c.isalnum() and c not in " .,-"
     ) / max(len(text), 1)
 
-    if symbol_ratio > 0.25:
-        score -= 0.20
+    if symbol_ratio > 0.3:
+        score -= 0.2
 
-    # 🚫 HTML entity noise penalty
     if "&#" in text or "&amp;" in text:
-        score -= 0.25
+        score -= 0.2
 
-
-    # Clamp score
+    # Clamp
     score = max(0.0, min(score, 1.0))
 
-    return score >= MIN_SCORE, round(score, 4)
+    return score >= 0.3, round(score, 4)

@@ -36,7 +36,7 @@ echo "Activating virtual environment..."
 source venv/bin/activate || . venv/Scripts/activate
 
 echo "Installing Python dependencies..."
-pip install -r requirements.txt
+pip install -r requirements_full.txt
 
 cd ..
 

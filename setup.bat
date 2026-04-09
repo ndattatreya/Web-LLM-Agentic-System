@@ -19,7 +19,7 @@ echo Activating virtual environment...
 call venv\Scripts\activate.bat
 
 echo Installing Python dependencies...
-pip install -r requirements.txt
+pip install -r requirements_full.txt
 
 cd ..
 

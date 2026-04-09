@@ -87,7 +87,7 @@ chmod +x setup.sh
 cd backend
 python -m venv venv
 # Activate: venv\Scripts\activate (Windows) or source venv/bin/activate (Unix)
-pip install -r requirements.txt
+pip install -r requirements_full.txt
 python app/main.py
 
 # In another terminal: Frontend setup

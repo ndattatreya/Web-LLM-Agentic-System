@@ -1,4 +1,8 @@
 relevance_model/checkpoint-14/
+relevance_model/checkpoint-100/
+relevance_model/checkpoint-200/
+relevance_model/checkpoint-300/
 relevance_model/model.safetensors
 venv/
 node_modules/
+backend/data/api_results

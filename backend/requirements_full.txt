@@ -19,6 +19,7 @@ pdfplumber>=0.10.0
 librosa
 soundfile
 scipy
+faster-whisper>=0.8.0
 
 # ML & NLP
 transformers>=4.30.0
