@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { apiService } from './services/api';
 import Header from './components/Header';
 import ProcessingForm from './components/ProcessingForm';
 import ResultsView from './components/ResultsView';
-import DataAnalysis from './components/DataAnalysis';
 
-type ActiveTab = 'processing' | 'results' | 'analysis';
+type ActiveTab = 'processing' | 'results';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('processing');
@@ -73,12 +72,6 @@ export default function App() {
             label="View Results"
             icon="📊"
           />
-          <TabButton
-            active={activeTab === 'analysis'}
-            onClick={() => setActiveTab('analysis')}
-            label="Data Analysis"
-            icon="📈"
-          />
         </motion.div>
 
         {/* Tab Content */}
@@ -100,16 +93,12 @@ export default function App() {
           {activeTab === 'results' && (
             <ResultsView result={processingResult} />
           )}
-
-          {activeTab === 'analysis' && (
-            <DataAnalysis result={processingResult} />
-          )}
         </motion.div>
       </main>
 
       {/* Footer */}
       <footer className="mt-20 py-8 border-t border-slate-700 text-center text-slate-400">
-        <p>Web-LLM Agentic System © 2024</p>
+        <p>Web-LLM Agentic System © 2026</p>
       </footer>
     </div>
   );

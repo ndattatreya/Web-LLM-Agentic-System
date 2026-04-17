@@ -1,8 +1,3 @@
-"""
-FastAPI Backend for Web-LLM Agentic System
-Provides REST API endpoints for document processing, relevance filtering, and model comparison
-"""
-
 import os
 
 os.environ["PATH"] += os.pathsep + r"C:\Users\NAMMINA JAHNAVI\Downloads\ffmpeg-8.1-essentials_build\ffmpeg-8.1-essentials_build\bin"
@@ -10,23 +5,21 @@ import sys
 import json
 import re
 import asyncio
+import time
 from pathlib import Path
 from typing import Optional, List
 from urllib.parse import urlparse
-from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict
 import tempfile
-import whisper
 
 # Add parent directory to path to import project modules
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from classifier.relevance_filter import is_relevant
 from crawler.document_loader import load_document
-from agent.content_extractor import extract_main_content
-from agent.pdf_cleaner import clean_pdf_text
-from agent.model_comparator import compare_models
+from classifier.relevance_filter import rank_segments
+from agent.knowledge_representation import build_knowledge_graph
 
 # ==========================================
 # CONFIG
@@ -46,16 +39,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-whisper_model = None
-
 # ==========================================
 # MODELS
 # ==========================================
-class ProcessingStatus(BaseModel):
-    status: str
-    progress: int
-    message: str
-    current_step: str
 
 class Segment(BaseModel):
     id: str
@@ -68,11 +54,17 @@ class ProcessingResult(BaseModel):
     source: str
     source_type: str
     raw_text: str
+    extracted_text: Optional[str] = None
     total_segments: int
+    relevant_count: int
+    coverage_percent: float
     relevant_segments: List[Segment]
     entities: List[str] = []
     key_points: List[str] = []
     processing_time: float
+    framework_output: Optional[dict] = None
+    knowledge_graph: Optional[dict] = None
+    comparison: Optional[dict] = None
 
 class ModelComparison(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
@@ -91,15 +83,16 @@ class DatasetStatistics(BaseModel):
     irrelevant_count: int
     relevant_percentage: float
 
+class GraphRequest(BaseModel):
+    text: str
+    max_nodes: Optional[int] = 12
+    max_relations: Optional[int] = 10
+
 # ==========================================
 # STORAGE
 # ==========================================
 RESULTS_DIR = Path(__file__).parent.parent / "data" / "api_results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-
-processing_results = {}
-RELEVANCE_THRESHOLD = 0.6
-MAX_RELEVANT_SEGMENTS = 500
 
 # ==========================================
 # UTILITY FUNCTIONS
@@ -124,20 +117,6 @@ def extract_keywords(text: str) -> List[str]:
     return [word for word in normalized.split() if len(word) > 3]
 
 
-def keyword_similarity(text: str, query: str) -> float:
-    if not query:
-        return 0.0
-
-    query_keywords = set(extract_keywords(query))
-    text_keywords = set(extract_keywords(text))
-
-    if not query_keywords or not text_keywords:
-        return 0.0
-
-    overlap = len(query_keywords & text_keywords)
-    return overlap / len(query_keywords)
-
-
 def get_source_query(source: str) -> str:
     if source.startswith("http"):
         parsed = urlparse(source)
@@ -145,6 +124,147 @@ def get_source_query(source: str) -> str:
         return Path(path).stem.replace("-", " ").replace("_", " ")
 
     return Path(source).stem.replace("-", " ").replace("_", " ")
+
+
+def build_reference_context(source_hint: str, text: str) -> str:
+    """Build rich reference context by combining source hint with text keywords.
+    
+    This helps the relevance filter compare segments against meaningful context
+    instead of empty strings, improving similarity scoring significantly.
+    """
+    # Start with source hint
+    context_parts = [source_hint]
+    
+    # Extract first 800 chars for beginning-of-document context
+    text_snippet = text[:800].strip()
+    if text_snippet:
+        context_parts.append(text_snippet)
+    
+    # Extract top keywords from the text (up to 30)
+    all_keywords = extract_keywords(text)
+    top_keywords = list(set(all_keywords))[:30]  # Deduplicate and limit
+    if top_keywords:
+        context_parts.append(" ".join(top_keywords))
+    
+    return " ".join(context_parts)
+
+
+def clean_web_text(text: str) -> str:
+    if not text:
+        return ""
+
+    # Remove citation markers such as [1], [a], [note 1]
+    text = re.sub(r"\[(?:\d+|[a-zA-Z]+|note\s*\d+)\]", "", text, flags=re.IGNORECASE)
+
+    # Remove stacked bracket fragments that often remain after scraping
+    text = re.sub(r"(\[\s*.*?\s*\])+", "", text)
+
+    # Normalize non-breaking spaces and punctuation spacing
+    text = text.replace("\xa0", " ")
+    text = re.sub(r"\s+([.,;:!?])", r"\1", text)
+    text = re.sub(r"([.,;:!?]){2,}", r"\1", text)
+
+    # Normalize whitespace and remove spaces before punctuation
+    text = re.sub(r"\s+", " ", text)
+    text = re.sub(r"\s+([.,!?;:])", r"\1", text)
+
+    # Split badly joined camel-case style sentence boundaries
+    text = re.sub(r"([a-z])([A-Z])", r"\1. \2", text)
+
+    return text.strip()
+
+
+def polish_sentence(text: str) -> str:
+    if not text:
+        return ""
+
+    sentences = re.split(r"(?<=[.!?])\s+", text)
+    cleaned: List[str] = []
+
+    for sentence in sentences:
+        sentence = sentence.strip()
+        if not sentence:
+            continue
+
+        sentence = sentence[0].upper() + sentence[1:] if len(sentence) > 1 else sentence.upper()
+        if sentence[-1] not in ".!?":
+            sentence += "."
+        cleaned.append(sentence)
+
+    return " ".join(cleaned)
+
+
+def build_framework_output(relevant_segments: List[dict], nodes: List[dict], edges: List[dict], graph_metrics: dict, processing_time: float) -> dict:
+    return {
+        "segments": [
+            int(seg["id"].replace("seg_", "")) + 1
+            for seg in relevant_segments
+        ],
+        "summary": " ".join(seg["text"] for seg in relevant_segments[:3])[:500],
+        "nodes": nodes,
+        "edges": edges,
+        "graph_metrics": graph_metrics,
+        "time": processing_time,
+    }
+
+
+def build_processing_result_payload(
+    source: str,
+    source_type: str,
+    text: str,
+    source_hint: str,
+    input_type: str,
+    start_time: float,
+) -> dict:
+    segments = split_text(text)
+    reference_text = build_reference_context(source_hint, text)
+
+    ranking_result = rank_segments(
+        segments,
+        reference_text=reference_text,
+        source_hint=source_hint,
+        input_type=input_type,
+        top_k=5,
+    )
+
+    relevant_segments = ranking_result["relevant_segments"]
+    total_segments = ranking_result["total_segments"]
+    relevant_count = ranking_result["relevant_count"]
+    coverage_percent = ranking_result["coverage_percent"]
+
+    processing_time = round(time.time() - start_time, 2)
+
+    graph = build_knowledge_graph([seg["text"] for seg in relevant_segments])
+    nodes = graph["nodes"]
+    edges = graph["edges"]
+    graph_metrics = graph.get("graph_metrics", {})
+
+    framework_output = build_framework_output(
+        relevant_segments,
+        nodes,
+        edges,
+        graph_metrics,
+        processing_time,
+    )
+
+    return {
+        "source": source,
+        "source_type": source_type,
+        "raw_text": text[:1000],
+        "extracted_text": text,
+        "total_segments": total_segments,
+        "relevant_count": relevant_count,
+        "coverage_percent": coverage_percent,
+        "relevant_segments": relevant_segments,
+        "entities": [node["id"] for node in nodes],
+        "key_points": [
+            seg["text"][:120]
+            for seg in relevant_segments[:5]
+        ],
+        "processing_time": processing_time,
+        "framework_output": framework_output,
+        "knowledge_graph": graph,
+    }
 
 
 def save_result(result_id: str, data: dict):
@@ -178,26 +298,46 @@ async def health():
     """Health check endpoint"""
     return {"status": "healthy"}
 
+@app.post("/graph/analyze", tags=["Graph"])
+async def analyze_graph(payload: GraphRequest):
+    """Build a semantic knowledge graph from extracted text"""
+    try:
+        graph = build_knowledge_graph(
+            [payload.text],
+            max_nodes=payload.max_nodes or 12,
+            max_relations=payload.max_relations or 10,
+        )
+
+        return {
+            "nodes": graph.get("nodes", []),
+            "edges": graph.get("edges", []),
+            "graph_metrics": graph.get("graph_metrics", {}),
+        }
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=f"Error analyzing graph: {str(error)}")
+
 @app.post("/process/file", response_model=ProcessingResult, tags=["Processing"])
 async def process_file(file: UploadFile = File(...)):
-    import time
-    import numpy as np
+    import os
 
     start_time = time.time()
 
     try:
         print(f"Processing file: {file.filename}")
 
-        # 1️⃣ Save temp file
+        # Save temp file
         with tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename).suffix) as tmp:
             content = await file.read()
             tmp.write(content)
             tmp_path = tmp.name
 
         try:
-            # 2️⃣ LOAD TEXT BASED ON FILE TYPE
+            # --------------------------------
+            # LOAD TEXT
+            # --------------------------------
             if tmp_path.endswith(".pdf"):
-                print("Cleaning PDF...")
+                from agent.pdf_cleaner import clean_pdf_text
+
                 doc = await asyncio.to_thread(load_document, tmp_path)
                 raw_text = doc.get("text", "")
                 text = await asyncio.to_thread(clean_pdf_text, raw_text)
@@ -206,107 +346,35 @@ async def process_file(file: UploadFile = File(...)):
                 with open(tmp_path, "r", encoding="utf-8") as f:
                     text = f.read()
 
-            # 🎧 NEW: AUDIO SUPPORT
             elif tmp_path.endswith((".mp3", ".wav", ".m4a", ".aac")):
-                print("Transcribing audio...")
+                whisper = __import__("whisper")
 
-                import os
-                import whisper
-
-                # 🔥 FORCE FFmpeg PATH (CRITICAL FIX)
-                os.environ["PATH"] += os.pathsep + r"C:\Users\NAMMINA JAHNAVI\Downloads\ffmpeg-8.1-essentials_build\ffmpeg-8.1-essentials_build\bin"
-
-                # 🔥 Use smaller model for speed
                 model = whisper.load_model("base")
-
                 result = model.transcribe(tmp_path)
-
                 text = result.get("text", "")
-
-                if not text or len(text.strip()) < 10:
-                    raise HTTPException(status_code=400, detail="Audio transcription failed")
-
-                print("Audio transcription completed")
 
             else:
                 raise HTTPException(
                     status_code=400,
-                    detail="Unsupported file type (PDF, TXT, AUDIO supported)"
+                    detail="Unsupported file type"
                 )
+
             if not text or len(text.strip()) < 50:
-                raise HTTPException(status_code=400, detail="File has insufficient content")
+                raise HTTPException(
+                    status_code=400,
+                    detail="File has insufficient content"
+                )
 
-            # 3️⃣ SEGMENT
-            segments = split_text(text)
-            source_query = get_source_query(file.filename)
-
-            print(f"Segments created: {len(segments)}")
-
-            scored_segments = []
-
-            # 4️⃣ SCORING (NO ML DEPENDENCY)
-            for idx, seg in enumerate(segments):
-                try:
-                    query_score = keyword_similarity(seg, source_query)
-                    length_score = min(len(seg.split()) / 50, 1.0)
-                    has_numbers = any(char.isdigit() for char in seg)
-                    structure_score = 0.2 if has_numbers else 0.0
-
-                    combined_score = (
-                        0.4 * query_score +
-                        0.4 * length_score +
-                        0.2 * structure_score
-                    )
-
-                    scored_segments.append({
-                        "id": f"seg_{idx}",
-                        "text": seg,
-                        "is_relevant": False,
-                        "relevance_score": round(query_score, 4),
-                        "confidence": round(combined_score, 4)
-                    })
-
-                except Exception as e:
-                    print(f"Error segment {idx}: {e}")
-                    continue
-
-            # 5️⃣ DYNAMIC THRESHOLD
-            scores = [seg["confidence"] for seg in scored_segments]
-
-            if not scores:
-                threshold = 0.4
-            else:
-                threshold = max(0.35, float(np.percentile(scores, 60)))
-
-            print(f"Dynamic threshold: {threshold}")
-
-            # 6️⃣ FILTER
-            relevant_segments = [
-                {**seg, "is_relevant": True}
-                for seg in scored_segments
-                if seg["confidence"] >= threshold
-            ]
-
-            relevant_segments = sorted(
-                relevant_segments,
-                key=lambda x: x["confidence"],
-                reverse=True
+            source_hint = get_source_query(file.filename)
+            input_type = "pdf" if tmp_path.endswith(".pdf") else "audio" if tmp_path.endswith((".mp3", ".wav", ".m4a", ".aac")) else "text"
+            return build_processing_result_payload(
+                source=file.filename,
+                source_type="file",
+                text=text,
+                source_hint=source_hint,
+                input_type=input_type,
+                start_time=start_time,
             )
-
-            print(f"Relevant segments: {len(relevant_segments)}")
-
-            processing_time = time.time() - start_time
-
-            return {
-                "source": file.filename,
-                "source_type": "file",
-                "raw_text": text[:1000],
-                "total_segments": len(segments),
-                "relevant_segments": relevant_segments,
-                "entities": [],
-                "key_points": [],
-                "processing_time": processing_time
-            }
 
         finally:
             if os.path.exists(tmp_path):
@@ -316,6 +384,61 @@ async def process_file(file: UploadFile = File(...)):
         print("ERROR:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/process/url", response_model=ProcessingResult, tags=["Processing"])
+async def process_url(url: str):
+    start_time = time.time()
+
+    try:
+        # --------------------------------
+        # FETCH CONTENT
+        # --------------------------------
+        if url.endswith(".pdf"):
+            from crawler.pdf_fetcher import fetch_pdf
+            from agent.pdf_cleaner import clean_pdf_text
+
+            doc = await asyncio.to_thread(fetch_pdf, url)
+            text = doc.get("text", "")
+            text = await asyncio.to_thread(clean_pdf_text, text)
+            text = polish_sentence(clean_web_text(text))
+
+        else:
+            from crawler.html_fetcher import fetch_html
+            from agent.content_extractor import extract_main_content
+
+            result = await asyncio.to_thread(fetch_html, url)
+
+            if result.get("error"):
+                raise HTTPException(
+                    status_code=400,
+                    detail=result.get("error")
+                )
+
+            text = await asyncio.to_thread(
+                extract_main_content,
+                result.get("html", "")
+            )
+            text = polish_sentence(clean_web_text(text))
+
+        if not text or len(text.strip()) < 50:
+            raise HTTPException(
+                status_code=400,
+                detail="URL has insufficient content"
+            )
+
+        source_hint = get_source_query(url)
+        return build_processing_result_payload(
+            source=url,
+            source_type="url",
+            text=text,
+            source_hint=source_hint,
+            input_type="url",
+            start_time=start_time,
+        )
+
+    except Exception as e:
+        print("ERROR:", str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+    
 @app.get("/data/dataset", response_model=DatasetStatistics, tags=["Data"])
 async def get_dataset_statistics():
     """Get dataset statistics"""

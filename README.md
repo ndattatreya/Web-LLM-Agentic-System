@@ -32,6 +32,47 @@ This is a **complete redesign of the Web-LLM Agentic System** with:
 | 🎨 **Modern UI/UX** | Responsive design with smooth animations |
 | 🔌 **REST API** | Full-featured API for programmatic access |
 | 🐳 **Docker Ready** | Docker and Docker Compose configuration included |
+| ⚖️ **LLM Evaluation** | Compare system against GPT and Gemini with detailed metrics |
+
+## 🆕 LLM Evaluation Module
+
+The system now includes a comprehensive **LLM Evaluation Module** for comparing your Web-LLM Agentic System against industry-leading models:
+
+### 🎯 Evaluation Features
+- **Multi-Model Comparison**: Compare the local framework against GPT and Gemini outputs generated in the browser
+- **Multiple Input Types**: Test with text, PDFs, URLs, audio, and images
+- **Comprehensive Metrics**: Accuracy, completeness, relevance, hallucination detection, and more
+- **Two Evaluation Modes**: Raw input vs. equalized preprocessing comparison
+- **Browser-Based LLM Calls**: Frontend comparison powered by Puter.js
+- **Beautiful Dashboard**: Interactive charts, radar plots, and detailed analysis
+- **Persistent Storage**: All evaluation runs saved to JSON database
+
+### 📊 Sample Evaluation Dashboard
+```
+┌─────────────────────────────────────────────────────────┐
+│  LLM Evaluation Dashboard                      ⚖️       │
+├─────────────────────────────────────────────────────────┤
+│ Total Runs: 24  |  Our System Wins: 18  |  GPT Wins: 4 │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  📈 Overall Scores Comparison                          │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │  ████████ Our System: 92.3                     │   │
+│  │  ██████ GPT: 87.1                              │   │
+│  │  ████ Gemini: 84.6                             │   │
+│  └─────────────────────────────────────────────────┘   │
+│                                                         │
+│  📊 Radar Chart | 📋 Detailed Metrics | 🕒 Response Times │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 🚀 Quick Start Evaluation
+
+1. **Install Dependencies**: Run the frontend install step in `frontend/` so `@heyputer/puter.js` is available.
+
+2. **Open the Dashboard**: Visit the "LLM Evaluation" tab in the web interface.
+
+3. **Run an Evaluation**: Enter input text and an expected answer, then run the browser-based comparison.
 
 ## 📸 Screenshots
 
@@ -39,7 +80,7 @@ This is a **complete redesign of the Web-LLM Agentic System** with:
 ┌─────────────────────────────────────────────────────────┐
 │  Web-LLM Agentic System                         🔵 Connected
 ├─────────────────────────────────────────────────────────┤
-│ [Process Document] [View Results] [Data Analysis]      │
+│ [Process Document] [View Results] [LLM Evaluation]     │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │  Pick how to process content:                          │
@@ -99,7 +140,7 @@ npm run dev
 ### Option 3: Docker
 
 ```bash
-docker-compose up
+docker-compose up or uvicorn backend.app.main:app --reload
 ```
 
 ## 🌐 Access the Application
@@ -151,7 +192,7 @@ Original Python Modules
 ├── Audio Processing (librosa, scipy)
 ├── NLP Models (transformers, torch)
 ├── Knowledge Graphs (networkx)
-└── Data Analysis (pandas, sklearn)
+└── Evaluation Analytics (pandas, sklearn)
 ```
 
 ## 🎯 Main Capabilities
@@ -175,10 +216,15 @@ Original Python Modules
 - Inference time analysis
 
 ### 4. **API Access**
-- REST API for all features
+- REST API for extraction, segmentation, and evaluation history
 - Request/response in JSON
 - Full input validation
 - Comprehensive error handling
+
+### 5. **LLM Evaluation**
+- Browser-based GPT and Gemini comparison via Puter.js
+- Local framework output generation from extracted text
+- Persistent evaluation history and stats
 
 ## 📚 API Examples
 

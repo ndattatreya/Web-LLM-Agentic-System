@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, Link as LinkIcon, Loader } from 'lucide-react';
 import { apiService } from '../services/api';
+import { buildLocalFrameworkOutput, generateComparisonResult } from '../services/comparison';
 
 interface ProcessingFormProps {
   onSuccess: (result: any) => void;
@@ -21,27 +22,33 @@ export default function ProcessingForm({
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const handleProcessURL = async () => {
-  if (!url.trim()) return;
+  const enrichResult = async (response: any, source: string) => {
+    const extractedText = response.extracted_text || response.raw_text || '';
+    
+    // Extract topic from source (URL path or filename)
+    let topic = 'document topic';
+    if (source.includes('://')) {
+      const url = new URL(source);
+      topic = url.pathname
+        .split('/')
+        .filter(p => p)
+        .pop()
+        ?.replace(/[-_]/g, ' ')
+        .replace(/\.\w+$/, '')
+        || 'document topic';
+    } else {
+      topic = source.split(/[/\\]/).pop()?.replace(/\.\w+$/, '') || 'document topic';
+    }
+    
+    const frameworkOutput = response.framework_output || await buildLocalFrameworkOutput(extractedText, topic);
+    const comparison = await generateComparisonResult(extractedText, topic, frameworkOutput);
 
-  try {
-    setIsLoading(true);
-
-    const response = await apiService.processURL(url);
-
-    console.log("API Response:", response);
-
-    // Normalize backend response so ResultsView always receives
-    // result.relevant_segments correctly
-    const normalizedResult = {
-      source: response.source || url,
-      source_type: response.source_type || "url",
-      raw_text: response.raw_text || "",
-      total_segments:
-        response.total_segments ||
-        response.segments?.length ||
-        0,
-
+    return {
+      source: response.source || source,
+      source_type: response.source_type || 'url',
+      raw_text: response.raw_text || extractedText.slice(0, 1000),
+      extracted_text: extractedText,
+      total_segments: response.total_segments || response.segments?.length || 0,
       relevant_segments:
         response.relevant_segments ||
         response.results?.relevant_segments ||
@@ -53,11 +60,29 @@ export default function ProcessingForm({
             (segment.confidence ?? 0) >= 0.25
         ) ||
         [],
-
       entities: response.entities || [],
       key_points: response.key_points || [],
       processing_time: response.processing_time || 0,
+      framework_output: frameworkOutput,
+      knowledge_graph: response.knowledge_graph || {
+        nodes: frameworkOutput.nodes,
+        edges: frameworkOutput.edges,
+      },
+      comparison,
     };
+  };
+
+  const handleProcessURL = async () => {
+  if (!url.trim()) return;
+
+  try {
+    setIsLoading(true);
+
+    const response = await apiService.processURL(url);
+
+    console.log("API Response:", response);
+
+    const normalizedResult = await enrichResult(response, url);
 
     console.log(
       "Normalized relevant segments:",
@@ -79,7 +104,7 @@ export default function ProcessingForm({
     setIsLoading(true);
     try {
       const result = await apiService.processFile(file);
-      onSuccess(result);
+      onSuccess(await enrichResult(result, file.name));
       setSelectedFile(null);
     } catch (error: any) {
       onError(error.response?.data?.detail || 'Error processing file');
