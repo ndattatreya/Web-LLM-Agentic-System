@@ -6,3 +6,4 @@ relevance_model/model.safetensors
 venv/
 node_modules/
 backend/data/api_results
+frontend/.env.local

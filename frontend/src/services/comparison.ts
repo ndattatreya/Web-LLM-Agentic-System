@@ -3,6 +3,12 @@ import { apiService } from './api';
 import type { ComparisonMetrics, ComparisonResult, FrameworkOutput } from './api';
 import { TOP_COMPARISON_SEGMENTS, ANALYZE_GRAPH_MAX_RELATIONS, ANALYZE_GRAPH_MAX_NODES } from '../constants/comparison';
 
+const puterAuthToken = import.meta.env.VITE_PUTER_AUTH_TOKEN?.trim();
+
+if (puterAuthToken) {
+  puter.setAuthToken(puterAuthToken);
+}
+
 const SEGMENT_WORDS = 50;
 const MAX_GRAPH_NODES = ANALYZE_GRAPH_MAX_NODES - 4;
 const MAX_GRAPH_RELATIONS = ANALYZE_GRAPH_MAX_RELATIONS - 4;

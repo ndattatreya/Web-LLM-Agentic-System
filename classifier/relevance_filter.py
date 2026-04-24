@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import re
 from typing import Any, Dict, List, Sequence
 
@@ -182,6 +183,7 @@ def rank_segments(
     input_type: str = "text",
     top_k: int = 5,
 ) -> List[Dict[str, Any]]:
+    _ = top_k  # Kept for API compatibility.
     total = len(segments)
     scored_segments: List[Dict[str, Any]] = []
 
@@ -208,15 +210,41 @@ def rank_segments(
         reverse=True
     )
 
-    # Use adaptive threshold: 45% of max score instead of fixed 0.15
-    # This gives realistic segment counts (25-40) per system instead of hundreds
     max_confidence = max((seg["confidence"] for seg in scored_segments), default=0.0)
-    adaptive_threshold = max_confidence * 0.45
+    min_coverage_count = math.ceil(total * 0.40)
+    target_coverage_count = math.ceil(total * 0.50)
+    min_required = min_coverage_count
+    if total >= 20:
+        min_required = max(10, min_coverage_count)
 
-    relevant_segments = [
-        seg for seg in scored_segments
-        if seg["confidence"] >= adaptive_threshold
-    ]
+    absolute_floor = min(total, 10) if total >= 20 else min_required
+
+    # Start strict and progressively relax if selected segments are too few.
+    threshold_factors = [0.45, 0.35, 0.25]
+    adaptive_threshold = 0.0
+    relevant_segments: List[Dict[str, Any]] = []
+
+    for factor in threshold_factors:
+        adaptive_threshold = max_confidence * factor
+        relevant_segments = [
+            seg for seg in scored_segments
+            if seg["confidence"] >= adaptive_threshold
+        ]
+
+        if len(relevant_segments) >= min_required:
+            break
+
+        # If fewer than 10 are selected, lower threshold and retry.
+        if len(relevant_segments) >= absolute_floor:
+            break
+
+    # Guarantee at least 40% coverage (and at least 10 when available).
+    if len(relevant_segments) < min_required:
+        relevant_segments = scored_segments[:min_required]
+
+    # Keep output within a practical upper band when possible.
+    if min_required <= target_coverage_count and len(relevant_segments) > target_coverage_count:
+        relevant_segments = relevant_segments[:target_coverage_count]
 
     return {
         "total_segments": total,
